@@ -44,7 +44,7 @@ final class Module_Maintenance extends GDO_Module
                 $response = GDT_Response::make();
                 if (module_enabled('Login'))
                 {
-                    $response->add(Logout::make()->executeWithInit());
+                    $response->addField(Logout::make()->executeWithInit());
                 }
                 Website::redirectMessage('err_maintenance_mode', null, href('Maintenance', 'ShowMaintenance'));
                 GDO_User::setCurrent(GDO_User::ghost());
