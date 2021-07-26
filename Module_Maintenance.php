@@ -6,19 +6,25 @@ use GDO\DB\GDT_Checkbox;
 use GDO\User\GDO_User;
 use GDO\Login\Method\Logout;
 use GDO\Core\GDT_Response;
-use GDO\Maintenance\Method\ShowMaintenance;
 use GDO\Core\Website;
 use GDO\Date\GDT_DateTime;
+use GDO\UI\GDT_Page;
+use GDO\UI\GDT_Headline;
 
 /**
  * Maintenance module.
  * @author gizmore
- * @version 6.10.1
+ * @version 6.10.4
  * @since 6.10.1
  */
 final class Module_Maintenance extends GDO_Module
 {
     public $module_priority = 7; # kill user early.
+    
+    public function onLoadLanguage()
+    {
+        return $this->loadLanguage('lang/\maintenance');
+    }
     
     ##############
     ### Config ###
@@ -26,28 +32,63 @@ final class Module_Maintenance extends GDO_Module
     public function getConfig()
     {
         return [
-            GDT_Checkbox::make('maintenance')->initial('0'),
-            GDT_DateTime::make('maintenance_end'),
+            GDT_Checkbox::make('maintenance_on')->initial('0'),
+            GDT_DateTime::make('maintenance_end')->format('min'),
         ];
     }
-    public function cfgMaintenance() { return $this->getConfigValue('maintenance'); }
+    public function cfgOn() { return $this->getConfigValue('maintenance_on'); }
+    public function cfgEnd() { return $this->getConfigValue('maintenance_end'); }
+    
+    #################
+    ### Whitelist ###
+    #################
+    /**
+     * Allow a few functions to operate normally on normal users.
+     * @return string[]
+     */
+    public static function getWhitelist()
+    {
+        return [
+            'login.form',
+            'captcha.image',
+            'maintenance.showmaintenance',
+        ];
+    }
+    
+    public function isCurrentMethodWhitelisted()
+    {
+        $mo = strtolower(mo());
+        $me = strtolower(me());
+        return in_array("{$mo}.{$me}", $this->getWhitelist(), true);
+    }
     
     ############
     ### Init ###
     ############
     public function onInit()
     {
-        if ($this->cfgMaintenance())
+        if ($this->cfgOn())
         {
-            if (!GDO_User::current()->isAdmin())
+            if ($this->isCurrentMethodWhitelisted())
+            {
+                return;
+            }
+            
+            if ( (!GDO_User::current()->isStaff()) &&
+                 (!GDO_User::current()->isSystem()) )
             {
                 $response = GDT_Response::make();
                 if (module_enabled('Login'))
                 {
                     $response->addField(Logout::make()->executeWithInit());
                 }
-                Website::redirectMessage('err_maintenance_mode', null, href('Maintenance', 'ShowMaintenance'));
+                Website::redirect(href('Maintenance', 'ShowMaintenance'));
                 GDO_User::setCurrent(GDO_User::ghost());
+            }
+            elseif (GDO_User::current()->isStaff())
+            {
+                GDT_Page::$INSTANCE->topNav->addField(
+                    GDT_Headline::make()->level(1)->text('msg_maintenance_mode'));
             }
         }
     }
