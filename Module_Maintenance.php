@@ -50,6 +50,7 @@ final class Module_Maintenance extends GDO_Module
     {
         return [
             'login.form',
+            'language.gettrans',
             'captcha.image',
             'maintenance.showmaintenance',
         ];
