@@ -23,7 +23,7 @@ final class Module_Maintenance extends GDO_Module
     
     public function onLoadLanguage()
     {
-        return $this->loadLanguage('lang/\maintenance');
+        return $this->loadLanguage('lang/maintenance');
     }
     
     ##############
