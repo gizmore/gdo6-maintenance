@@ -14,7 +14,7 @@ use GDO\UI\GDT_Headline;
 /**
  * Maintenance module.
  * @author gizmore
- * @version 6.10.4
+ * @version 6.11.0
  * @since 6.10.1
  */
 final class Module_Maintenance extends GDO_Module
